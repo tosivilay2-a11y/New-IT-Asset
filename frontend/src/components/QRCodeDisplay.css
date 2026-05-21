@@ -1,0 +1,101 @@
+/* QR Code Display Styles */
+
+.asset-label {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.asset-label-card {
+  border: 2px solid #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.asset-label-header {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.asset-details {
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.asset-details div {
+  margin-bottom: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.asset-details strong {
+  min-width: 70px;
+  color: #555;
+}
+
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-code-image {
+  width: 140px;
+  height: 140px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  background: white;
+}
+
+.qr-code-label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  color: #666;
+}
+
+.asset-label-footer {
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .asset-label-card {
+    border: 2px solid #000;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  body {
+    margin: 0;
+    padding: 10px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .asset-details {
+    font-size: 11px;
+  }
+  
+  .qr-code-image {
+    width: 100px;
+    height: 100px;
+  }
+}

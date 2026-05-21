@@ -1,0 +1,18 @@
+PostgreSQL Errors - QUICK FIX
+
+All code changes are complete!
+
+STEP 1: Restart Backend
+- Stop current backend (Ctrl+C)
+- Run: python start_server.py
+
+STEP 2: Test
+- Go to frontend
+- Create new asset
+- Should work ✅
+
+IF STILL ERROR:
+- Run: python backend/recreate_assets_table.py
+- Then restart backend
+
+Done!

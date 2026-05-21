@@ -1,0 +1,55 @@
+============================================================
+ASSET MANAGEMENT SYSTEM - STATUS
+============================================================
+
+✅ ALL SERVICES ARE RUNNING!
+
+Services:
+---------
+✅ Database (PostgreSQL)  - Running on port 5432
+✅ Backend API (FastAPI)  - Running on port 8000
+✅ Frontend (React)       - Running on port 3000
+
+Database:
+---------
+✅ Tables created
+✅ Sample data loaded
+✅ Users created
+
+============================================================
+ACCESS THE APPLICATION
+============================================================
+
+Open your browser and go to:
+👉 http://localhost:3000
+
+Login with:
+📧 Email:    admin@example.com
+🔑 Password: admin123
+
+============================================================
+API DOCUMENTATION
+============================================================
+
+Backend API: http://localhost:8000
+API Docs:    http://localhost:8000/docs
+
+============================================================
+USEFUL COMMANDS
+============================================================
+
+View logs:
+  docker-compose logs -f
+
+Stop services:
+  docker-compose down
+
+Restart services:
+  docker-compose restart
+
+Check status:
+  docker-compose ps
+
+============================================================
+EVERYTHING IS READY TO USE!
+============================================================

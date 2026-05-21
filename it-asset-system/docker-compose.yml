@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: it-asset-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: it_asset_db
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5433:5432"  # Using 5433 to avoid conflict with existing PostgreSQL
+    volumes:
+      - it_asset_postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/schema-postgres.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d it_asset_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - it-asset-network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: it-asset-backend
+    restart: unless-stopped
+    command: sh -c "npm run db:seed && npm run dev"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+      - ./backend/public:/app/public
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: it_asset_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production-12345
+      JWT_EXPIRES_IN: 24h
+      PORT: 5000
+      NODE_ENV: development
+      MAX_FILE_SIZE: 10485760
+      UPLOAD_PATH: ./uploads
+      QR_CODE_SIZE: 300
+      QR_CODE_PATH: ./public/qrcodes
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - it-asset-network
+
+volumes:
+  it_asset_postgres_data:
+    name: it_asset_postgres_data
+
+networks:
+  it-asset-network:
+    name: it-asset-network
+    driver: bridge

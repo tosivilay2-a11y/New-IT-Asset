@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .endpoint {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Backend Connection Test</h1>
+        
+        <div class="info result">
+            <strong>Testing connection to:</strong> http://localhost:8000
+        </div>
+
+        <div style="margin: 20px 0;">
+            <button onclick="testHealth()">Test Health Check</button>
+            <button onclick="testCountries()">Test Countries</button>
+            <button onclick="testProvinces()">Test Provinces</button>
+            <button onclick="testCompanies()">Test Companies</button>
+            <button onclick="testAllEndpoints()">Test All Endpoints</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div style="margin-top: 30px;">
+            <h3>Available Endpoints:</h3>
+            <div class="endpoint">
+                <strong>GET</strong> /health - Health check
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /countries - List all countries
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /provinces - List all provinces
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /companies - List all companies
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /main-categories - List all categories
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /departments - List all departments
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /asset-statuses - List all asset statuses
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const resultsDiv = document.getElementById('results');
+
+        async function testEndpoint(endpoint, name) {
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    return {
+                        success: true,
+                        name: name,
+                        data: data,
+                        count: Array.isArray(data) ? data.length : 'N/A'
+                    };
+                } else {
+                    return {
+                        success: false,
+                        name: name,
+                        error: `HTTP ${response.status}: ${response.statusText}`
+                    };
+                }
+            } catch (error) {
+                return {
+                    success: false,
+                    name: name,
+                    error: error.message
+                };
+            }
+        }
+
+        function displayResult(result) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${result.success ? 'success' : 'error'}`;
+            
+            if (result.success) {
+                resultDiv.innerHTML = `
+                    <strong>✅ ${result.name}</strong><br>
+                    Status: OK<br>
+                    ${result.count !== 'N/A' ? `Records: ${result.count}<br>` : ''}
+                    Data: ${JSON.stringify(result.data, null, 2).substring(0, 200)}...
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <strong>❌ ${result.name}</strong><br>
+                    Error: ${result.error}
+                `;
+            }
+            
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testHealth() {
+            resultsDiv.innerHTML = '';
+            const result = await testEndpoint('/health', 'Health Check');
+            displayResult(result);
+        }
+
+        async function testCountries() {
+            resultsDiv.innerHTML = '';
+            const result = await testEndpoint('/countries', 'Countries');
+            displayResult(result);
+        }
+
+        async function testProvinces() {
+            resultsDiv.innerHTML = '';
+            const result = await testEndpoint('/provinces', 'Provinces');
+            displayResult(result);
+        }
+
+        async function testCompanies() {
+            resultsDiv.innerHTML = '';
+            const result = await testEndpoint('/companies', 'Companies');
+            displayResult(result);
+        }
+
+        async function testAllEndpoints() {
+            resultsDiv.innerHTML = '<div class="info result">Testing all endpoints...</div>';
+            
+            const endpoints = [
+                { path: '/health', name: 'Health Check' },
+                { path: '/countries', name: 'Countries' },
+                { path: '/provinces', name: 'Provinces' },
+                { path: '/companies', name: 'Companies' },
+                { path: '/main-categories', name: 'Main Categories' },
+                { path: '/departments', name: 'Departments' },
+                { path: '/asset-statuses', name: 'Asset Statuses' }
+            ];
+
+            resultsDiv.innerHTML = '';
+            
+            for (const endpoint of endpoints) {
+                const result = await testEndpoint(endpoint.path, endpoint.name);
+                displayResult(result);
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

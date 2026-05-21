@@ -1,0 +1,179 @@
+/* Cost Center Management - Premium Styles */
+
+/* Add button variant */
+.cc-btn-add {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+}
+.cc-btn-add:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Loading */
+.cc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 15px;
+  color: #6366f1;
+}
+.cc-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: cc-spin 0.7s linear infinite;
+}
+@keyframes cc-spin { to { transform: rotate(360deg); } }
+
+/* Table wrapper */
+.cc-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(99, 102, 241, 0.08);
+}
+
+/* Table */
+.cc-table thead {
+  background: linear-gradient(90deg, #f0f0ff 0%, #f5f3ff 100%) !important;
+}
+.cc-table th {
+  color: #4338ca !important;
+  border-bottom: 2px solid #e0e7ff !important;
+}
+.cc-table tbody tr:hover {
+  background: #f8f7ff !important;
+}
+
+/* Code badge */
+.cc-code-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* Location cells */
+.cc-location-cell {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.cc-id {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.cc-optional-tag {
+  color: #cbd5e1;
+  font-size: 16px;
+}
+
+/* Modal */
+.cc-modal {
+  max-width: 640px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2) !important;
+}
+
+.cc-modal-header {
+  background: linear-gradient(135deg, #f0f0ff 0%, #faf5ff 100%);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 25px !important;
+}
+
+.cc-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cc-modal-icon {
+  font-size: 22px;
+}
+.cc-modal-header h3 {
+  color: #4338ca !important;
+}
+
+/* Cascade flow header */
+.cc-cascade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.07) 0%, rgba(139, 92, 246, 0.07) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4338ca;
+}
+.cc-cascade-hint {
+  font-size: 11px;
+  color: #818cf8;
+  font-weight: 400;
+}
+
+/* Select styling */
+.cc-select {
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.cc-select:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+.cc-select-disabled {
+  background: #f8f8fc !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+}
+
+/* Optional label */
+.cc-optional-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: #94a3b8;
+  margin-left: 5px;
+}
+
+/* Checkbox */
+.cc-checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.cc-checkbox-label input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
+/* Save button */
+.cc-btn-save {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+}
+.cc-btn-save:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  transform: translateY(-1px);
+}
+
+/* help-text */
+.help-text {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 5px;
+}
