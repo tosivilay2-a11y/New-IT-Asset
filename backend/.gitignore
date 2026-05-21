@@ -10,5 +10,4 @@ ENV/
 *.db
 *.sqlite3
 .DS_Store
-alembic/versions/*.py
-!alembic/versions/__init__.py
+
