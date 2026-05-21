@@ -8,6 +8,7 @@ import './StockLocationConfig.css';
 
 function StockLocationConfig() {
   const [companies, setCompanies] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [stockLocations, setStockLocations] = useState([]);
   const [selectedStockLocation, setSelectedStockLocation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ function StockLocationConfig() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newStockForm, setNewStockForm] = useState({
     stockname: '',
-    companyid: ''
+    locationid: ''
   });
 
   useEffect(() => {
@@ -30,12 +31,15 @@ function StockLocationConfig() {
       setLoading(true);
       setError('');
       
-      // Fetch companies
-      const compResponse = await api.get('/companies/');
-      setCompanies(compResponse.data || []);
+      // Fetch companies, physical locations, and stock locations in parallel
+      const [compResponse, locResponse, stockResponse] = await Promise.all([
+        api.get('/companies/'),
+        api.get('/locations/'),
+        api.get('/stock-locations/')
+      ]);
       
-      // Fetch stock locations
-      const stockResponse = await api.get('/stock-locations/');
+      setCompanies(compResponse.data || []);
+      setLocations(locResponse.data || []);
       setStockLocations(stockResponse.data || []);
       
       // Find the default stock location
@@ -47,7 +51,7 @@ function StockLocationConfig() {
       setLoading(false);
     } catch (error) {
       console.error('Error loading data:', error);
-      setError('Failed to load data');
+      setError('Failed to load stock location configuration data.');
       setLoading(false);
     }
   };
@@ -60,8 +64,8 @@ function StockLocationConfig() {
       return;
     }
     
-    if (!newStockForm.companyid) {
-      setError('Please select a company');
+    if (!newStockForm.locationid) {
+      setError('Please select a physical location');
       return;
     }
 
@@ -71,12 +75,12 @@ function StockLocationConfig() {
       
       // Create new stock location
       await api.post('/stock-locations/', {
-        stockname: newStockForm.stockname,
-        locationid: parseInt(newStockForm.companyid)
+        stockname: newStockForm.stockname.trim(),
+        locationid: parseInt(newStockForm.locationid)
       });
       
       setSuccess(`Stock location "${newStockForm.stockname}" created successfully!`);
-      setNewStockForm({ stockname: '', companyid: '' });
+      setNewStockForm({ stockname: '', locationid: '' });
       setShowCreateForm(false);
       
       // Reload stock locations
@@ -84,7 +88,7 @@ function StockLocationConfig() {
       setLoading(false);
     } catch (error) {
       console.error('Error creating stock location:', error);
-      setError('Failed to create stock location');
+      setError(error.response?.data?.detail || 'Failed to create stock location');
       setLoading(false);
     }
   };
@@ -146,6 +150,12 @@ function StockLocationConfig() {
   }
 
   const selectedStockLocationData = stockLocations.find(s => s.stockid === selectedStockLocation);
+  const selectedPhysicalLoc = selectedStockLocationData 
+    ? locations.find(l => l.id === selectedStockLocationData.locationid)
+    : null;
+  const selectedComp = selectedPhysicalLoc
+    ? companies.find(c => c.companyid === selectedPhysicalLoc.companyid)
+    : null;
 
   return (
     <div className="stock-location-config">
@@ -178,11 +188,15 @@ function StockLocationConfig() {
               className="form-control"
             >
               <option value="">-- Choose a stock location --</option>
-              {stockLocations.map((stock) => (
-                <option key={stock.stockid} value={stock.stockid}>
-                  {stock.stockname}
-                </option>
-              ))}
+              {stockLocations.map((stock) => {
+                const physical = locations.find(l => l.id === stock.locationid);
+                const labelSuffix = physical ? ` - ${physical.name}` : '';
+                return (
+                  <option key={stock.stockid} value={stock.stockid}>
+                    {stock.stockname}{labelSuffix}
+                  </option>
+                );
+              })}
             </select>
             <small>Select the stock location where assets will be returned after check-in</small>
           </div>
@@ -198,9 +212,15 @@ function StockLocationConfig() {
                 <span>{selectedStockLocationData.stockid}</span>
               </div>
               <div className="info-item">
-                <strong>Company ID:</strong>
-                <span>{selectedStockLocationData.locationid}</span>
+                <strong>Physical Location:</strong>
+                <span>{selectedPhysicalLoc ? selectedPhysicalLoc.name : `ID: ${selectedStockLocationData.locationid}`}</span>
               </div>
+              {selectedComp && (
+                <div className="info-item">
+                  <strong>Company:</strong>
+                  <span>{selectedComp.companyname}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -253,21 +273,25 @@ function StockLocationConfig() {
               </div>
 
               <div className="form-group">
-                <label>Company *</label>
+                <label>Physical Location *</label>
                 <select
-                  value={newStockForm.companyid}
-                  onChange={(e) => setNewStockForm({...newStockForm, companyid: e.target.value})}
+                  value={newStockForm.locationid}
+                  onChange={(e) => setNewStockForm({...newStockForm, locationid: e.target.value})}
                   className="form-control"
                   required
                 >
-                  <option value="">-- Select a company --</option>
-                  {companies.map((company) => (
-                    <option key={company.companyid} value={company.companyid}>
-                      {company.companyname}
-                    </option>
-                  ))}
+                  <option value="">-- Select a physical location --</option>
+                  {locations.map((loc) => {
+                    const company = companies.find(c => c.companyid === loc.companyid);
+                    const label = company ? `${loc.name} (${company.companyname})` : loc.name;
+                    return (
+                      <option key={loc.id} value={loc.id}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
-                <small>Select the company for this stock location</small>
+                <small>Select the physical location for this stock location</small>
               </div>
 
               <div className="button-group">
@@ -324,7 +348,8 @@ function StockLocationConfig() {
           ) : (
             <div className="location-list">
               {stockLocations.map((stock) => {
-                const company = companies.find(c => c.companyid === stock.locationid);
+                const location = locations.find(l => l.id === stock.locationid);
+                const company = location ? companies.find(c => c.companyid === location.companyid) : null;
                 return (
                   <div key={stock.stockid} className={`location-item ${stock.stockdefault ? 'default' : ''}`}>
                     <div className="location-header">
@@ -344,7 +369,8 @@ function StockLocationConfig() {
                       )}
                     </div>
                     <div className="location-id">
-                      Stock ID: {stock.stockid} | Company: {company ? company.companyname : `Company #${stock.locationid}`}
+                      Stock ID: {stock.stockid} | Location: {location ? location.name : `Location #${stock.locationid}`}
+                      {company && ` | Company: ${company.companyname}`}
                     </div>
                   </div>
                 );
