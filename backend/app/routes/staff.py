@@ -79,8 +79,16 @@ def create_staff(
             raise HTTPException(status_code=400, detail="Location does not belong to the selected Company")
 
     # Validate cost center exists (if provided)
-    if staff.costcenterid:
-        costcenter = db.query(CostCenter).filter(CostCenter.costcenterid == staff.costcenterid).first()
+    effective_costcenterid = staff.costcenterid
+    
+    # Auto-fill default cost center from department if not manually specified
+    if not effective_costcenterid and staff.departmentid:
+        dept = db.query(Department).filter(Department.departmentid == staff.departmentid).first()
+        if dept and dept.costcenterid:
+            effective_costcenterid = dept.costcenterid
+
+    if effective_costcenterid:
+        costcenter = db.query(CostCenter).filter(CostCenter.costcenterid == effective_costcenterid).first()
         if not costcenter:
             raise HTTPException(status_code=400, detail="Cost Center not found")
         if staff.companyid and costcenter.companyid and costcenter.companyid != staff.companyid:
@@ -95,7 +103,7 @@ def create_staff(
         employmentstatus=staff.employmentstatus,
         companyid=staff.companyid,
         locationid=staff.locationid,
-        costcenterid=staff.costcenterid,
+        costcenterid=effective_costcenterid,
         countryid=staff.countryid,
         provinceid=staff.provinceid,
         departmentid=staff.departmentid
@@ -184,6 +192,14 @@ def update_staff(
         comp_id = staff_update.get("companyid", db_staff.companyid)
         if comp_id and location.companyid and location.companyid != comp_id:
             raise HTTPException(status_code=400, detail="Location does not belong to the selected Company")
+
+    # Auto-fill default cost center from department if department is being updated and cost center is not provided
+    if "departmentid" in staff_update and "costcenterid" not in staff_update:
+        dept_id = staff_update["departmentid"]
+        if dept_id:
+            dept = db.query(Department).filter(Department.departmentid == dept_id).first()
+            if dept and dept.costcenterid:
+                staff_update["costcenterid"] = dept.costcenterid
 
     # Validate cost center exists (if provided)
     if staff_update.get("costcenterid"):
@@ -391,6 +407,11 @@ async def import_staff(
                     else:
                         errors.append(f"Row {idx}: Cost Center '{costcenter_name}' not found")
                         continue
+                elif departmentid:
+                    # Fallback to default cost center of the department
+                    dept_obj = db.query(Department).filter(Department.departmentid == departmentid).first()
+                    if dept_obj and dept_obj.costcenterid:
+                        costcenterid = dept_obj.costcenterid
                 
                 # Check if email already exists (if provided)
                 if email:

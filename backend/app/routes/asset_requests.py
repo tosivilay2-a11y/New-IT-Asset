@@ -137,6 +137,38 @@ def assign_request_asset(
             if company:
                 companyid = company.companyid
                 
+        # Resolve geographic details, departmentid, and costcenterid for the new staff profile
+        countryid = None
+        provinceid = db_request.province_id
+        departmentid = None
+        costcenterid = None
+
+        if companyid:
+            from ..models.company import Company
+            company_obj = db.query(Company).filter(Company.companyid == companyid).first()
+            if company_obj:
+                if not provinceid:
+                    provinceid = company_obj.provinceid
+                from ..models.province import Province
+                province_obj = db.query(Province).filter(Province.provinceid == provinceid).first()
+                if province_obj:
+                    countryid = province_obj.countryid
+
+        if db_request.department:
+            from ..models.department import Department
+            # Try to find a formal department belonging to the selected company
+            dept_obj = db.query(Department).filter(
+                (Department.departmentname.ilike(db_request.department)) & 
+                (Department.companyid == companyid)
+            ).first()
+            # Fallback to any department matching the name
+            if not dept_obj:
+                dept_obj = db.query(Department).filter(Department.departmentname.ilike(db_request.department)).first()
+            
+            if dept_obj:
+                departmentid = dept_obj.departmentid
+                costcenterid = dept_obj.costcenterid
+
         db_staff = Staff(
             employeeid=emp_id,
             fullname=db_request.staff_name,
@@ -145,7 +177,11 @@ def assign_request_asset(
             position=db_request.position,
             companyid=companyid,
             locationid=db_request.location_id,
-            employmentstatus="Active"
+            employmentstatus="Active",
+            countryid=countryid,
+            provinceid=provinceid,
+            departmentid=departmentid,
+            costcenterid=costcenterid
         )
         db.add(db_staff)
         db.commit()
