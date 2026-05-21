@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { assetsAPI } from '../services/api';
+import api, { assetsAPI } from '../services/api';
 import LocationSelector from '../components/LocationSelector';
 import CategorySelector from '../components/CategorySelector';
 import AssetIDPreview from '../components/AssetIDPreview';
@@ -68,14 +68,35 @@ function AssetFormNew({ isEdit = false }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
+  const [costCenters, setCostCenters] = useState([]);
 
   useEffect(() => {
-    if (editMode && id) {
-      fetchAsset(id);
-    } else {
-      setLoading(false);
-    }
+    const initForm = async () => {
+      try {
+        setLoading(true);
+        await fetchCostCenters();
+        if (editMode && id) {
+          await fetchAsset(id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error initializing form:', err);
+        setError('Failed to initialize form');
+        setLoading(false);
+      }
+    };
+    initForm();
   }, [editMode, id]);
+
+  const fetchCostCenters = async () => {
+    try {
+      const response = await api.get('/cost-centers/');
+      setCostCenters(response.data || []);
+    } catch (err) {
+      console.error('Error fetching cost centers:', err);
+    }
+  };
 
   const fetchAsset = async (assetId) => {
     try {
@@ -590,13 +611,28 @@ function AssetFormNew({ isEdit = false }) {
 
               <div className="form-group">
                 <label>Cost Center</label>
-                <input
-                  type="text"
-                  value={asset.cost_center}
-                  onChange={(e) => handleChange('cost_center', e.target.value)}
-                  placeholder="Cost Center Code"
-                  className="form-control"
-                />
+                {(() => {
+                  const hasMatchingCC = costCenters.some(cc => cc.costcentercode === asset.cost_center);
+                  return (
+                    <select
+                      value={asset.cost_center}
+                      onChange={(e) => handleChange('cost_center', e.target.value)}
+                      className="form-control"
+                    >
+                      <option value="">-- Select Cost Center --</option>
+                      {!hasMatchingCC && asset.cost_center && (
+                        <option value={asset.cost_center}>
+                          {asset.cost_center} (Legacy/Unregistered)
+                        </option>
+                      )}
+                      {costCenters.map(cc => (
+                        <option key={cc.costcenterid} value={cc.costcentercode}>
+                          {cc.costcentercode} {cc.costcentername ? `- ${cc.costcentername}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
               </div>
             </div>
 
