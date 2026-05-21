@@ -14,6 +14,8 @@ function AssetCheckInOut() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [departments, setDepartments] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
   
   // Modal states
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -64,7 +66,9 @@ function AssetCheckInOut() {
           fetchUsers(),
           fetchStaff(),
           fetchCompanies(),
-          fetchStockLocations()
+          fetchStockLocations(),
+          fetchDepartments(),
+          fetchCostCenters()
         ]);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -154,6 +158,45 @@ function AssetCheckInOut() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get('/departments/');
+      setDepartments(response.data || []);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchCostCenters = async () => {
+    try {
+      const response = await api.get('/cost-centers/');
+      setCostCenters(response.data || []);
+    } catch (error) {
+      console.error('Error fetching cost centers:', error);
+    }
+  };
+
+  const getDepartmentName = (assignedStaff) => {
+    if (!assignedStaff) return '-';
+    if (assignedStaff.departmentid) {
+      const dept = departments.find(d => d.departmentid === assignedStaff.departmentid);
+      if (dept) return dept.departmentname;
+    }
+    return assignedStaff.department || '-';
+  };
+
+  const getCostCenterCode = (assignedStaff) => {
+    if (!assignedStaff || !assignedStaff.costcenterid) return '-';
+    const cc = costCenters.find(c => c.costcenterid === assignedStaff.costcenterid);
+    return cc ? cc.costcentercode : `ID: ${assignedStaff.costcenterid}`;
+  };
+
+  const getCostCenterName = (assignedStaff) => {
+    if (!assignedStaff || !assignedStaff.costcenterid) return '';
+    const cc = costCenters.find(c => c.costcenterid === assignedStaff.costcenterid);
+    return cc ? cc.costcentername : '';
+  };
+
   const handleCheckout = async (e) => {
     e.preventDefault();
     setError('');
@@ -237,6 +280,11 @@ function AssetCheckInOut() {
       
       // Record checkout history: move from asset base location to staff location
       const checkoutLocationAfter = selectedStaff.locationid || selectedStaff.companyid || asset.locationid;
+      const deptName = getDepartmentName(selectedStaff);
+      const ccCode = getCostCenterCode(selectedStaff);
+      const ccName = getCostCenterName(selectedStaff);
+      const ccId = selectedStaff.costcenterid || 'N/A';
+      
       await api.post('/asset-history/', {
         assetid: asset.assetid,
         action: 'CHECKOUT',
@@ -246,7 +294,7 @@ function AssetCheckInOut() {
         condition_after: 'Good',
         location_before: asset.locationid,
         location_after: checkoutLocationAfter,
-        notes: `Checked out to staff member ${selectedStaff.fullname}`
+        notes: `Checked out to staff member ${selectedStaff.fullname} (Dept: ${deptName}, Cost Center: ${ccCode} - ${ccName}, CC ID: ${ccId})`
       });
       
       setSuccess(`Asset ${checkoutForm.assetId} successfully checked out to ${selectedStaff?.fullname}!`);
@@ -339,15 +387,22 @@ function AssetCheckInOut() {
       });
       
       // Record check-in history
+      const assignedStaff = staff.find(s => s.staffid === assetToProcess.assignedto);
+      const staffDept = getDepartmentName(assignedStaff);
+      const staffCC = assignedStaff ? getCostCenterCode(assignedStaff) : 'N/A';
+      const staffCCName = assignedStaff ? getCostCenterName(assignedStaff) : '';
+      const staffCCId = assignedStaff?.costcenterid || 'N/A';
+
       await api.post('/asset-history/', {
         assetid: assetToProcess.assetid,
         action: 'CHECKIN',
+        staffid: assetToProcess.assignedto || null,
         reason: checkinForm.reason,
         condition_before: assetToProcess.condition || 'Good',
         condition_after: checkinForm.condition,
         location_before: assetToProcess.locationid,
         location_after: locationId,
-        notes: `Checked in. Stock Location: ${finalStockId}. Condition: ${checkinForm.condition}`
+        notes: `Checked in from staff member ${assignedStaff ? assignedStaff.fullname : 'N/A'} (Dept: ${staffDept}, Cost Center: ${staffCC}${staffCCName ? ' - ' + staffCCName : ''}, CC ID: ${staffCCId}). Stock Location: ${finalStockId}. Condition: ${checkinForm.condition}`
       });
       
       setSuccess(`Asset ${assetToProcess.assetcode} successfully checked in!`);
@@ -500,6 +555,8 @@ function AssetCheckInOut() {
                     <th>Asset Name</th>
                     <th>Category</th>
                     <th>Assigned To (Staff)</th>
+                    <th>Department</th>
+                    <th>Cost Center (ID)</th>
                     <th>Company</th>
                     <th>Assigned By</th>
                     <th>Assigned Date</th>
@@ -529,6 +586,33 @@ function AssetCheckInOut() {
                             </div>
                             <div className="user-email">{assignedStaff?.employeeid}</div>
                           </div>
+                        </td>
+                        <td>
+                          <div className="department-info" style={{ fontWeight: '500', color: '#2c3e50' }}>
+                            {getDepartmentName(assignedStaff)}
+                          </div>
+                        </td>
+                        <td>
+                          {assignedStaff?.costcenterid ? (
+                            <div className="costcenter-info">
+                              <span className="cc-code-badge" style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                backgroundColor: '#f39c12',
+                                color: 'white',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>
+                                {getCostCenterCode(assignedStaff)}
+                              </span>
+                              <div style={{ fontSize: '11px', color: '#7f8c8d', marginTop: '3px' }}>
+                                {getCostCenterName(assignedStaff)} (ID: {assignedStaff.costcenterid})
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#bdc3c7' }}>-</span>
+                          )}
                         </td>
                         <td>
                           <div className="company-info">
@@ -629,26 +713,54 @@ function AssetCheckInOut() {
                 </div>
 
                 {checkoutForm.staffId && (
-                  <div className="user-details-card">
+                  <div className="user-details-card" style={{
+                    backgroundColor: '#f8f9fa',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '15px',
+                    marginTop: '15px'
+                  }}>
                     {(() => {
                       const selectedStaff = staff.find(s => s.staffid === parseInt(checkoutForm.staffId));
                       if (selectedStaff) {
+                        const ccCode = getCostCenterCode(selectedStaff);
+                        const ccName = getCostCenterName(selectedStaff);
                         return (
-                          <div>
-                            <div className="detail-row">
-                              <strong>Name:</strong> {selectedStaff.fullname}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Name:</strong>
+                              <span style={{ fontWeight: '600', color: '#2d3748' }}>{selectedStaff.fullname}</span>
                             </div>
-                            <div className="detail-row">
-                              <strong>Employee ID:</strong> {selectedStaff.employeeid}
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Employee ID:</strong>
+                              <span style={{ color: '#2d3748' }}>{selectedStaff.employeeid}</span>
                             </div>
-                            <div className="detail-row">
-                              <strong>Email:</strong> {selectedStaff.email}
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Email:</strong>
+                              <span style={{ color: '#2d3748' }}>{selectedStaff.email || '-'}</span>
                             </div>
-                            <div className="detail-row">
-                              <strong>Department:</strong> {selectedStaff.department}
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Department:</strong>
+                              <span style={{ fontWeight: '500', color: '#2d3748' }}>{getDepartmentName(selectedStaff)}</span>
                             </div>
-                            <div className="detail-row">
-                              <strong>Position:</strong> {selectedStaff.position}
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Cost Center Code:</strong>
+                              <span style={{
+                                padding: '2px 8px',
+                                backgroundColor: '#f39c12',
+                                color: 'white',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}>{ccCode}</span>
+                            </div>
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #edf2f7', paddingBottom: '6px' }}>
+                              <strong style={{ color: '#4a5568' }}>Cost Center Name:</strong>
+                              <span style={{ color: '#2d3748', fontSize: '13px', textAlign: 'right' }}>{ccName || '-'}</span>
+                            </div>
+                            <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '4px' }}>
+                              <strong style={{ color: '#4a5568' }}>Cost Center ID:</strong>
+                              <span style={{ color: '#2d3748', fontWeight: '500' }}>{selectedStaff.costcenterid || '-'}</span>
                             </div>
                           </div>
                         );
@@ -705,46 +817,119 @@ function AssetCheckInOut() {
               </button>
             </div>
 
-            <div className="asset-details-banner search-banner">
-              <div className="form-group mb-0">
-                <label style={{ color: 'white' }}>Asset ID / Code *</label>
-                <input
-                  type="text"
-                  value={checkinForm.assetId}
-                  onChange={(e) => setCheckinForm({...checkinForm, assetId: e.target.value})}
-                  placeholder="e.g., ASSET001"
-                  className="form-control"
-                  disabled={!!selectedAsset}
-                  required
-                />
-              </div>
-              {selectedAsset && (
-                <>
-                  <div className="detail-item">
-                    <strong>Asset Name:</strong> {selectedAsset.assetname}
+            {(() => {
+              const currentAsset = selectedAsset || assignedAssets.find(a => a.assetcode === checkinForm.assetId);
+              return currentAsset ? (
+                <div className="asset-details-banner search-banner" style={{
+                  background: 'linear-gradient(135deg, #1abc9c 0%, #16a085 100%)',
+                  padding: '20px',
+                  margin: '-20px -20px 20px -20px',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: '15px',
+                  color: 'white',
+                  borderRadius: '0'
+                }}>
+                  <div className="form-group mb-0">
+                    <label style={{ color: 'white', fontWeight: '600' }}>Asset ID / Code *</label>
+                    <input
+                      type="text"
+                      value={checkinForm.assetId}
+                      onChange={(e) => setCheckinForm({...checkinForm, assetId: e.target.value})}
+                      placeholder="e.g., ASSET001"
+                      className="form-control"
+                      disabled={!!selectedAsset}
+                      required
+                    />
                   </div>
                   <div className="detail-item">
-                    <strong>Currently Assigned To:</strong> {
-                      (() => {
-                        const assignedStaff = staff.find(s => s.staffid === selectedAsset.assignedto);
-                        if (assignedStaff?.fullname) return assignedStaff.fullname;
-                        const assignedUser = users.find(u => u.userid === selectedAsset.assignedto);
+                    <strong>Asset Name</strong>
+                    <span style={{ fontSize: '15px', fontWeight: '600' }}>{currentAsset.assetname}</span>
+                  </div>
+                  <div className="detail-item">
+                    <strong>Currently Assigned To</strong>
+                    <span style={{ fontSize: '15px', fontWeight: '600' }}>
+                      {(() => {
+                        const assignedStaff = staff.find(s => s.staffid === currentAsset.assignedto);
+                        if (assignedStaff?.fullname) return `${assignedStaff.fullname} (${assignedStaff.employeeid})`;
+                        const assignedUser = users.find(u => u.userid === currentAsset.assignedto);
                         if (assignedUser) {
                           const fullName = `${assignedUser.firstname || ''} ${assignedUser.lastname || ''}`.trim();
-                          return fullName || assignedUser.email || `User #${selectedAsset.assignedto}`;
+                          return fullName || assignedUser.email || `User #${currentAsset.assignedto}`;
                         }
-                        return selectedAsset.assigned_user_name || 'Unassigned';
-                      })()
-                    }
+                        return currentAsset.assigned_user_name || 'Unassigned';
+                      })()}
+                    </span>
                   </div>
-                </>
-              )}
-              {!selectedAsset && checkinForm.assetId && (
-                <div className="detail-item info-text">
-                  <small>Enter the exact Asset Code to lookup assignment details during check-in</small>
+                  {(() => {
+                    const assignedStaff = staff.find(s => s.staffid === currentAsset.assignedto);
+                    if (assignedStaff) {
+                      return (
+                        <>
+                          <div className="detail-item">
+                            <strong>Department</strong>
+                            <span style={{ fontSize: '14px', fontWeight: '500' }}>{getDepartmentName(assignedStaff)}</span>
+                          </div>
+                          <div className="detail-item">
+                            <strong>Cost Center (ID)</strong>
+                            <div>
+                              <span className="cc-code-badge" style={{
+                                display: 'inline-block',
+                                padding: '1px 6px',
+                                backgroundColor: '#f39c12',
+                                color: 'white',
+                                borderRadius: '3px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                marginRight: '5px'
+                              }}>
+                                {getCostCenterCode(assignedStaff)}
+                              </span>
+                              <span style={{ fontSize: '12px' }}>
+                                (ID: {assignedStaff.costcenterid || 'N/A'})
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
-              )}
-            </div>
+              ) : (
+                <div className="asset-details-banner search-banner" style={{
+                  background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
+                  padding: '20px',
+                  margin: '-20px -20px 20px -20px',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 2fr',
+                  gap: '20px',
+                  color: 'white',
+                  borderRadius: '0',
+                  alignItems: 'center'
+                }}>
+                  <div className="form-group mb-0">
+                    <label style={{ color: 'white', fontWeight: '600' }}>Asset ID / Code *</label>
+                    <input
+                      type="text"
+                      value={checkinForm.assetId}
+                      onChange={(e) => setCheckinForm({...checkinForm, assetId: e.target.value})}
+                      placeholder="e.g., ASSET001"
+                      className="form-control"
+                      disabled={!!selectedAsset}
+                      required
+                    />
+                  </div>
+                  <div className="detail-item" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>🔍</span>
+                    <div>
+                      <strong>Asset Assignment Lookup</strong>
+                      <span style={{ fontSize: '13px', opacity: '0.9' }}>Enter the exact Asset Code to automatically load assigned staff, department, and cost center details.</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             
             <form onSubmit={handleCheckin}>
               <div className="modal-body">

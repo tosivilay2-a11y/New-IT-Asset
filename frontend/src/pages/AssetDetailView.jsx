@@ -166,6 +166,8 @@ function AssetDetailView() {
   const [companies, setCompanies] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [departments, setDepartments] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [conditionReports, setConditionReports] = useState([]);
   const [conditionLoading, setConditionLoading] = useState(false);
@@ -234,7 +236,9 @@ function AssetDetailView() {
         fetchAssetHistory(assetId),
         fetchStaff(),
         fetchCompanies(),
-        fetchUsers()
+        fetchUsers(),
+        fetchDepartments(),
+        fetchCostCenters()
       ]);
       setLoading(false);
     } catch (error) {
@@ -242,6 +246,45 @@ function AssetDetailView() {
       setError('Failed to load asset details');
       setLoading(false);
     }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get('/departments/');
+      setDepartments(response.data || []);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchCostCenters = async () => {
+    try {
+      const response = await api.get('/cost-centers/');
+      setCostCenters(response.data || []);
+    } catch (error) {
+      console.error('Error fetching cost centers:', error);
+    }
+  };
+
+  const getDepartmentName = (assignedStaff) => {
+    if (!assignedStaff) return 'N/A';
+    if (assignedStaff.departmentid) {
+      const dept = departments.find(d => d.departmentid === assignedStaff.departmentid);
+      if (dept) return dept.departmentname;
+    }
+    return assignedStaff.department || 'N/A';
+  };
+
+  const getCostCenterCode = (assignedStaff) => {
+    if (!assignedStaff || !assignedStaff.costcenterid) return 'N/A';
+    const cc = costCenters.find(c => c.costcenterid === assignedStaff.costcenterid);
+    return cc ? cc.costcentercode : `ID: ${assignedStaff.costcenterid}`;
+  };
+
+  const getCostCenterName = (assignedStaff) => {
+    if (!assignedStaff || !assignedStaff.costcenterid) return '';
+    const cc = costCenters.find(c => c.costcenterid === assignedStaff.costcenterid);
+    return cc ? cc.costcentername : '';
   };
 
   const getStatusBadgeClass = (status) => {
@@ -785,7 +828,43 @@ function AssetDetailView() {
                 <div className="value">
                   <span>🏢</span> {(() => {
                     const assignedStaff = staff.find(s => s.staffid === asset.assignedto);
-                    return assignedStaff ? assignedStaff.department : 'N/A';
+                    return getDepartmentName(assignedStaff);
+                  })()}
+                </div>
+              </div>
+              <div className="info-item">
+                <div className="label">Cost Center:</div>
+                <div className="value">
+                  {(() => {
+                    const assignedStaff = staff.find(s => s.staffid === asset.assignedto);
+                    if (!assignedStaff || !assignedStaff.costcenterid) return 'N/A';
+                    const ccCode = getCostCenterCode(assignedStaff);
+                    const ccName = getCostCenterName(assignedStaff);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="cc-code-badge" style={{
+                          display: 'inline-block',
+                          padding: '2px 8px',
+                          backgroundColor: '#f39c12',
+                          color: 'white',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}>
+                          {ccCode}
+                        </span>
+                        {ccName && <span style={{ fontSize: '13px', color: '#4a5568' }}>- {ccName}</span>}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="info-item">
+                <div className="label">Cost Center ID:</div>
+                <div className="value">
+                  <span>🆔</span> {(() => {
+                    const assignedStaff = staff.find(s => s.staffid === asset.assignedto);
+                    return assignedStaff?.costcenterid || 'N/A';
                   })()}
                 </div>
               </div>
