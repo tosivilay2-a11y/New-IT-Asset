@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import CountryManagement from '../components/admin/CountryManagement';
 import ProvinceManagement from '../components/admin/ProvinceManagement';
 import CompanyManagement from '../components/admin/CompanyManagement';
-import LocationManagement from '../components/admin/LocationManagement';
 import CategoryManagement from '../components/admin/CategoryManagement';
 import StaffManagement from '../components/admin/StaffManagement';
 import DepartmentManagement from '../components/admin/DepartmentManagement';
@@ -26,7 +25,6 @@ function SystemConfig() {
     { id: 'generator', label: '🔢 Asset ID Generator', icon: '🔢' },
     { id: 'storage', label: '☁️ File Storage', icon: '☁️' },
     { id: 'stock-location', label: '📍 Stock Location', icon: '📍' },
-    { id: 'locations', label: '📍 Location Management', icon: '📍' },
     { id: 'staff', label: '👥 Staff Management', icon: '👥' },
     { id: 'departments', label: '📁 Departments', icon: '📁' },
     { id: 'cost-centers', label: '💰 Cost Centers', icon: '💰' },
@@ -52,8 +50,6 @@ function SystemConfig() {
         return <AssetIDGenerator />;
       case 'stock-location':
         return <StockLocationConfig />;
-      case 'locations':
-        return <LocationManagement />;
       case 'staff':
         return <StaffManagement />;
       case 'departments':

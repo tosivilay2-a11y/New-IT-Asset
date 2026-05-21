@@ -5,7 +5,6 @@ import './StaffManagement.css';
 function StaffManagement() {
   const [staff, setStaff] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [locations, setLocations] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
   const [countries, setCountries] = useState([]);
   const [provinces, setProvinces] = useState([]);
@@ -29,7 +28,6 @@ function StaffManagement() {
     position: '',
     employmentstatus: 'Active',
     companyid: '',
-    locationid: '',
     costcenterid: '',
     countryid: '',
     provinceid: '',
@@ -45,7 +43,6 @@ function StaffManagement() {
     position: '',
     employmentstatus: 'Active',
     companyid: '',
-    locationid: '',
     costcenterid: '',
     countryid: '',
     provinceid: '',
@@ -69,9 +66,7 @@ function StaffManagement() {
     ? costCenters.filter(cc => cc.companyid === parseInt(formData.companyid) && cc.isactive !== false)
     : [];
 
-  const filteredLocations = formData.companyid
-    ? locations.filter(l => l.companyid === parseInt(formData.companyid))
-    : [];
+
 
   // Cascading derived lists for Edit Form
   const editFilteredProvinces = editFormData.countryid
@@ -90,9 +85,7 @@ function StaffManagement() {
     ? costCenters.filter(cc => cc.companyid === parseInt(editFormData.companyid) && cc.isactive !== false)
     : [];
 
-  const editFilteredLocations = editFormData.companyid
-    ? locations.filter(l => l.companyid === parseInt(editFormData.companyid))
-    : [];
+
 
   // Cascade handlers for Create Form
   const handleCountryChange = (val) => {
@@ -102,8 +95,7 @@ function StaffManagement() {
       provinceid: '',
       companyid: '',
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -113,8 +105,7 @@ function StaffManagement() {
       provinceid: val,
       companyid: '',
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -123,8 +114,7 @@ function StaffManagement() {
       ...prev,
       companyid: val,
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -149,8 +139,7 @@ function StaffManagement() {
       provinceid: '',
       companyid: '',
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -160,8 +149,7 @@ function StaffManagement() {
       provinceid: val,
       companyid: '',
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -170,8 +158,7 @@ function StaffManagement() {
       ...prev,
       companyid: val,
       departmentid: '',
-      costcenterid: '',
-      locationid: ''
+      costcenterid: ''
     }));
   };
 
@@ -228,12 +215,7 @@ function StaffManagement() {
         console.log('Companies endpoint not available');
       }
       
-      try {
-        const locationsRes = await api.get('/locations/');
-        setLocations(locationsRes.data || []);
-      } catch (err) {
-        console.log('Locations endpoint not available');
-      }
+
 
       try {
         const costCentersRes = await api.get('/cost-centers/');
@@ -260,7 +242,6 @@ function StaffManagement() {
       position: '',
       employmentstatus: 'Active',
       companyid: '',
-      locationid: '',
       costcenterid: '',
       countryid: '',
       provinceid: '',
@@ -284,7 +265,7 @@ function StaffManagement() {
         position: formData.position,
         employmentstatus: formData.employmentstatus,
         companyid: formData.companyid ? parseInt(formData.companyid) : null,
-        locationid: formData.locationid ? parseInt(formData.locationid) : null,
+        locationid: null,
         costcenterid: formData.costcenterid ? parseInt(formData.costcenterid) : null,
         countryid: formData.countryid ? parseInt(formData.countryid) : null,
         provinceid: formData.provinceid ? parseInt(formData.provinceid) : null,
@@ -317,7 +298,7 @@ function StaffManagement() {
         position: editFormData.position,
         employmentstatus: editFormData.employmentstatus,
         companyid: editFormData.companyid ? parseInt(editFormData.companyid) : null,
-        locationid: editFormData.locationid ? parseInt(editFormData.locationid) : null,
+        locationid: null,
         costcenterid: editFormData.costcenterid ? parseInt(editFormData.costcenterid) : null,
         countryid: editFormData.countryid ? parseInt(editFormData.countryid) : null,
         provinceid: editFormData.provinceid ? parseInt(editFormData.provinceid) : null,
@@ -336,7 +317,6 @@ function StaffManagement() {
         position: '',
         employmentstatus: 'Active',
         companyid: '',
-        locationid: '',
         costcenterid: '',
         countryid: '',
         provinceid: '',
@@ -421,10 +401,10 @@ function StaffManagement() {
   };
 
   const downloadTemplate = () => {
-    const template = `Employee ID,Full Name,Email,Department,Position,Company,Location,Employment Status
-EMP001,John Doe,john@example.com,IT,Developer,Acme Corp,New York,Active
-EMP002,Jane Smith,jane@example.com,HR,Manager,Acme Corp,New York,Active
-EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Active`;
+    const template = `Employee ID,Full Name,Email,Department,Position,Company,Employment Status
+EMP001,John Doe,john@example.com,IT,Developer,Acme Corp,Active
+EMP002,Jane Smith,jane@example.com,HR,Manager,Acme Corp,Active
+EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Active`;
 
     const element = document.createElement('a');
     element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(template));
@@ -501,7 +481,6 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                 <th>Company</th>
                 <th>Department</th>
                 <th>Position</th>
-                <th>Location</th>
                 <th>Cost Center</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -512,7 +491,6 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                 const country = countries.find(c => c.countryid === member.countryid);
                 const province = provinces.find(p => p.provinceid === member.provinceid);
                 const company = companies.find(c => c.companyid === member.companyid);
-                const location = locations.find(l => l.id === member.locationid);
                 const costcenter = costCenters.find(cc => cc.costcenterid === member.costcenterid);
                 const departmentName = member.departmentid 
                   ? (departments.find(d => d.departmentid === member.departmentid)?.departmentname || member.department)
@@ -530,7 +508,6 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                     <td>{company ? company.companyname : '-'}</td>
                     <td>{departmentName || '-'}</td>
                     <td>{member.position || '-'}</td>
-                    <td>{location ? location.name : '-'}</td>
                     <td>
                       {costcenter ? (
                         <span className="cc-badge" title={costcenter.costcentername}>
@@ -558,7 +535,6 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                             position: member.position || '',
                             employmentstatus: member.employmentstatus || 'Active',
                             companyid: member.companyid || '',
-                            locationid: member.locationid || '',
                             costcenterid: member.costcenterid || '',
                             countryid: member.countryid || '',
                             provinceid: member.provinceid || '',
@@ -669,7 +645,7 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
               }}>
                 <span>🌍 Organization Mapping</span>
                 <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 400 }}>
-                  Country → Province → Company → Department → Cost Center / Location
+                  Country → Province → Company → Department → Cost Center
                 </span>
               </div>
 
@@ -783,30 +759,7 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                 </select>
               </div>
 
-              {/* Location */}
-              <div className="form-group">
-                <label>Location</label>
-                <select
-                  name="locationid"
-                  value={formData.locationid}
-                  onChange={(e) => setFormData(prev => ({ ...prev, locationid: e.target.value }))}
-                  className="form-control"
-                  disabled={!formData.companyid}
-                >
-                  <option value="">
-                    {!formData.companyid
-                      ? '-- Select Company First --'
-                      : filteredLocations.length === 0
-                        ? '-- No Locations for this Company --'
-                        : '-- Select Location --'}
-                  </option>
-                  {filteredLocations.map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
 
               <div className="modal-actions">
                 <button
@@ -916,7 +869,7 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
               }}>
                 <span>🌍 Organization Mapping</span>
                 <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 400 }}>
-                  Country → Province → Company → Department → Cost Center / Location
+                  Country → Province → Company → Department → Cost Center
                 </span>
               </div>
 
@@ -1030,30 +983,7 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                 </select>
               </div>
 
-              {/* Location */}
-              <div className="form-group">
-                <label>Location</label>
-                <select
-                  name="locationid"
-                  value={editFormData.locationid}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, locationid: e.target.value }))}
-                  className="form-control"
-                  disabled={!editFormData.companyid}
-                >
-                  <option value="">
-                    {!editFormData.companyid
-                      ? '-- Select Company First --'
-                      : editFilteredLocations.length === 0
-                        ? '-- No Locations for this Company --'
-                        : '-- Select Location --'}
-                  </option>
-                  {editFilteredLocations.map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
 
               <div className="modal-actions">
                 <button
@@ -1096,8 +1026,8 @@ EMP003,Bob Johnson,bob@example.com,Finance,Analyst,Tech Solutions,Los Angeles,Ac
                   <li>Download the template file below</li>
                   <li>Fill in your staff data in the Excel file</li>
                   <li>Required columns: Employee ID, Full Name</li>
-                  <li>Optional columns: Email, Department, Position, Company, Location, Employment Status</li>
-                  <li>Company and Location must match existing records in the system</li>
+                  <li>Optional columns: Email, Department, Position, Company, Employment Status</li>
+                  <li>Company must match existing records in the system</li>
                   <li>Upload the completed file</li>
                 </ul>
               </div>
